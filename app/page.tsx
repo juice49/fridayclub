@@ -107,18 +107,10 @@ const components = {
       <div>
         <div
           style={{
-            // fontFamily:
-            //   "Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium', 'Nimbus Sans Narrow', sans-serif-condensed, sans-serif",
-            // fontFamily:
-            //   "Inter, Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', Arial, sans-serif",
             fontVariationSettings: `"slnt" -6, "wdth" 125, "wght" 800`,
             fontSize: '4rem',
-            // fontWeight: 900,
             lineHeight: 1,
             textTransform: 'uppercase',
-            // color: 'oklch(41.39% 0.1801 304.94)',
-            // color: 'oklch(48.81% 0.1801 304.94)',
-            // color: 'oklch(56.18% 0.2886 304.94)',
             color: 'oklch(56.18% 0.2319 288)',
           }}
         >
