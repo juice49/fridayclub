@@ -1,5 +1,3 @@
-'use cache'
-
 import type { ComponentType } from 'react'
 
 interface Props {
