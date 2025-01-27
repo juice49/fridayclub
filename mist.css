@@ -1,0 +1,28 @@
+:root {
+  background-color: rgba(0, 0, 0);
+  color: rgb(217, 217, 217);
+  color: oklch(92.14% 0.0214 139.76);
+  color: oklch(78% 0.0236 181.07);
+  font-size: 1.08rem;
+  font-variation-settings: "slnt" 0, "wdth" 100, "wght" 220;
+  /* font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas,
+    "DejaVu Sans Mono", monospace;
+  font-family: Avenir, Montserrat, Corbel, "URW Gothic", source-sans-pro,
+    sans-serif; */
+  font-family: var(--font-monaspace);
+  font-weight: normal;
+  line-height: 1.5;
+}
+
+body {
+  padding: 2rem;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+* + *:not(body) {
+  margin-block-start: 1.5lh;
+}

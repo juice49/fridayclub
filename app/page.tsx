@@ -1,0 +1,208 @@
+'use cache'
+
+import { PortableText } from '@portabletext/react'
+import Link from 'next/link'
+import { type ComponentType, Fragment } from 'react'
+import { firstValueFrom } from 'rxjs'
+import { Sources } from '../components/sources'
+import { LEGACY_ARTICLE_DATE, LOCALE, TIMEZONE } from '../constants'
+import { sanityClient } from '../sanity-client'
+
+const INTERNAL_LINK_FRAGMENT = `
+  _type == "internalLink" => {
+    "path": "/" + array::join(
+      array::compact(
+        [
+          select(
+            @->_type == "track" => "tracks",
+            @->_type == "artist" => "artists",
+            @->_type == "releaseGroup" => "release-groups"
+          ),
+          @->slug.current
+        ]
+      ),
+      "/"
+    )
+  }
+`
+
+const LIST_ARTICLES_QUERY = `
+  *[_type == "article" && column == "weeklyRoundup"] {
+      _id,
+      title,
+      column,
+      publishedAt,
+      "body": body[] {
+        ...,
+        ...select(
+          _type == 'item' => {
+            "subject": subject[]->{
+              ...,
+              ...select(
+                _type == "track" => {
+                  "artistsNames": artists[]->name,
+                  "sources": {
+                    "appleMusic": sources.appleMusic,
+                    "spotify": sources.spotify,
+                    "youtube": sources.youtube
+                  }
+                }
+              )
+            },
+            body[] {
+              ...,
+              markDefs[] {
+                ...,
+                ...select({
+                  ${INTERNAL_LINK_FRAGMENT}
+                })
+              }
+            }
+          }
+        ),
+        ...select(_type == 'lyrics' => {
+          "lyrics": lyrics,
+          "trackTitle": track->title,
+          "trackArtistsNames": track->artists[]->name,
+          "sources": {
+            "appleMusic": track->sources.appleMusic,
+            "spotify": track->sources.spotify,
+            "youtube": track->sources.youtube
+          }
+        }),
+        markDefs[] {
+          ...,
+          ...select({
+            ${INTERNAL_LINK_FRAGMENT}
+          })
+        }
+      }
+    }
+`
+
+const listFormatter = new Intl.ListFormat()
+
+const components = {
+  types: {
+    item: ({ value }) => (
+      <div>
+        <div style={{ padding: '2rem', outline: '1px dashed currentColor' }}>
+          {value.subject.map(subject => (
+            <Fragment key={subject._id}>
+              <p>
+                <strong style={{ textTransform: 'uppercase' }}>
+                  {subject.title}
+                </strong>{' '}
+                by {listFormatter.format(subject.artistsNames)}
+              </p>
+              <Sources sources={subject.sources} />
+            </Fragment>
+          ))}
+        </div>
+        {/* @ts-ignore */}
+        <PortableText value={value.body} components={components} />
+      </div>
+    ),
+    lyrics: ({ value }) => (
+      <div>
+        <div
+          style={{
+            // fontFamily:
+            //   "Bahnschrift, 'DIN Alternate', 'Franklin Gothic Medium', 'Nimbus Sans Narrow', sans-serif-condensed, sans-serif",
+            // fontFamily:
+            //   "Inter, Roboto, 'Helvetica Neue', 'Arial Nova', 'Nimbus Sans', Arial, sans-serif",
+            fontVariationSettings: `"slnt" -6, "wdth" 125, "wght" 800`,
+            fontSize: '4rem',
+            // fontWeight: 900,
+            lineHeight: 1,
+            textTransform: 'uppercase',
+            // color: 'oklch(41.39% 0.1801 304.94)',
+            // color: 'oklch(48.81% 0.1801 304.94)',
+            // color: 'oklch(56.18% 0.2886 304.94)',
+            color: 'oklch(56.18% 0.2319 288)',
+          }}
+        >
+          {/* @ts-ignore */}
+          <PortableText value={value.lyrics} components={components} />
+        </div>
+        <p
+          style={{
+            marginBlockStart: 0,
+            textAlign: 'right',
+            fontStyle: 'italic',
+          }}
+        >
+          <strong
+            style={{
+              textTransform: 'uppercase',
+              fontVariationSettings: `"slnt" -6, "wdth" 125, "wght" 800`,
+            }}
+          >
+            {value.trackTitle}
+          </strong>{' '}
+          by {listFormatter.format(value.trackArtistsNames)}
+        </p>
+        <Sources sources={value.sources} />
+        {/* @ts-ignore */}
+        <PortableText value={value.comment} components={components} />
+      </div>
+    ),
+  },
+  marks: {
+    internalLink: ({ value, children }) => (
+      <Link href={value.path}>{children}</Link>
+    ),
+  },
+}
+
+const Page: ComponentType = async () => {
+  const articles = await firstValueFrom(sanityClient.fetch(LIST_ARTICLES_QUERY))
+
+  return (
+    <>
+      <h1>fridayclub</h1>
+      {articles.map(article => (
+        <article
+          key={article._id}
+          style={{ maxWidth: '60ch', marginInline: 'auto' }}
+        >
+          <h2>{article.title}</h2>
+          <time dateTime={article.publishedAt}>
+            {formatDate(article.publishedAt)}{' '}
+            {isDay(article.publishedAt, 'Friday')
+              ? '(friday!)'
+              : '(not a friday)'}
+          </time>
+          {article.publishedAt < LEGACY_ARTICLE_DATE && (
+            <p>
+              <em>
+                I started writing this post while I was still putting the site
+                together, so its publication is a little delayed.
+              </em>
+            </p>
+          )}
+          {/* @ts-ignore */}
+          <PortableText value={article.body} components={components} />
+        </article>
+      ))}
+    </>
+  )
+}
+
+export default Page
+
+function isDay(date: string, dayName: string): boolean {
+  return (
+    new Date(date).toLocaleString(LOCALE, {
+      timeZone: TIMEZONE,
+      weekday: 'long',
+    }) === dayName
+  )
+}
+
+function formatDate(date: string): string {
+  return new Intl.DateTimeFormat(LOCALE, {
+    timeZone: TIMEZONE,
+    dateStyle: 'long',
+  }).format(new Date(date))
+}

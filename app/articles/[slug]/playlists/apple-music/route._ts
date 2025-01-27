@@ -1,0 +1,178 @@
+import {
+  distinct,
+  firstValueFrom,
+  from,
+  map,
+  of,
+  switchMap,
+  tap,
+  toArray,
+  zip,
+} from 'rxjs'
+import { fromFetch } from 'rxjs/fetch'
+import { sanityClient } from '../../../../../sanity-client'
+
+export const dynamic = 'force-static'
+
+const PLAYLIST_QUERY = `
+  function playlist::track($scope) = $scope{
+    // _id,
+    // title,
+    // "artistNames": artists[]->name,
+    // "releaseGroupName": releaseGroup->name,
+    "appleMusicId": sources.appleMusic,
+  };
+
+  *[_type == "article" && _id == $id] {
+    title,
+    column,
+    publishedAt,
+    "playlist": body[] {
+      "tracks": select(
+        _type == 'item' => playlist::track(subject[]->),
+        _type == "lyrics" => playlist::track([track->])
+      ),
+    }[defined(tracks)].tracks[]
+  }[0]
+`
+
+const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Major Version</key><integer>1</integer>
+	<key>Minor Version</key><integer>1</integer>
+	<key>Application Version</key><string>1.5.1.24</string>
+	<key>Tracks</key>
+	<dict>
+	  <key>12000</key>
+		<dict>
+			<key>Track ID</key><integer>12000</integer>
+			<key>Name</key><string>Fizzy</string>
+			<key>Artist</key><string>Sleaford Mods</string>
+			<key>Album</key><string>All That Glue</string>
+			<key>Track Type</key><string>Remote</string>
+			<key>Apple Music</key><true/>
+		</dict>
+	  <key>12032</key>
+		<dict>
+			<key>Track ID</key><integer>12032</integer>
+			<key>Name</key><string>Just Like We Do</string>
+			<key>Artist</key><string>Sleaford Mods</string>
+			<key>Album</key><string>English Tapas</string>
+			<key>Track Type</key><string>Remote</string>
+			<key>Apple Music</key><true/>
+		</dict>
+	</dict>
+	<key>Playlists</key>
+	<array>
+		<dict>
+			<key>Name</key><string>fridayclub: MUSTAAAAAARD</string>
+			<key>Description</key><string>https://fridayclub.co/mustaaaaaaard</string>
+			<key>Playlist Items</key>
+			<array>
+				<dict>
+					<key>Track ID</key><integer>12000</integer>
+				</dict>
+				<dict>
+					<key>Track ID</key><integer>12032</integer>
+				</dict>
+			</array>
+		</dict>
+	</array>
+</dict>
+</plist>
+`
+
+const listFormatter = new Intl.ListFormat()
+
+export async function GET() {
+  // xxx merge and dedupe tracks!
+  const [tracks, metadata] = await firstValueFrom(
+    sanityClient
+      .withConfig({
+        apiVersion: 'vX',
+      })
+      .fetch(PLAYLIST_QUERY, {
+        id: '29c0738c-82c7-4836-9a71-2853b527b4ee',
+      })
+      .pipe(
+        switchMap(({ playlist, ...rest }) =>
+          zip(
+            from(playlist).pipe(
+              // distinct(({ _id }) => _id),
+              map(({ appleMusicId }) => appleMusicId),
+              distinct(),
+              toArray(),
+              tap(v => console.log('a', v)),
+              switchMap(appleMusicIds =>
+                fromFetch(
+                  `https://itunes.apple.com/lookup?id=${appleMusicIds}`,
+                  {
+                    selector: response => response.json(),
+                  },
+                ),
+              ),
+            ),
+            of(rest),
+          ),
+        ),
+      ),
+  )
+
+  // return Response.json(tracks.results)
+
+  const _xml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Major Version</key><integer>1</integer>
+    <key>Minor Version</key><integer>1</integer>
+    <key>Application Version</key><string>1.5.1.24</string>
+    <key>Tracks</key>
+    <dict>
+    ${tracks.results
+      .map(
+        track => `
+   	<key>${track.trackId}</key>
+      <dict>
+       	<key>Track ID</key><integer>${track.trackId}</integer>
+       	<key>Name</key><string>${encodeURIComponent(track.trackName)}</string>
+       	<key>Artist</key><string>${encodeURIComponent(track.artistName)}</string>
+       	<key>Album</key><string>${encodeURIComponent(track.collectionName)}</string>
+       	<key>Track Type</key><string>Remote</string>
+       	<key>Apple Music</key><true/>
+      </dict>
+   	`,
+      )
+      .join('\n')}
+    </dict>
+  <key>Playlists</key>
+  <array>
+  	<dict>
+  		<key>Name</key><string>fridayclub: xxx</string>
+  		<key>Description</key><string>https://fridayclub.co/mustaaaaaaard</string>
+  		<key>Playlist Items</key>
+  		<array>
+  		${tracks.results
+        .map(
+          track => `
+    <dict>
+     	<key>Track ID</key><integer>${track.trackId}</integer>
+    </dict>
+  		`,
+        )
+        .join('\n')}
+  		</array>
+  	</dict>
+  </array>
+  </dict>
+</plist>`
+
+  return new Response(_xml, {
+    headers: {
+      'Content-Type': 'text/xml',
+      // 'Content-Disposition': 'attachment; filename="new-test.xml"',
+    },
+  })
+}
