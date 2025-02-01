@@ -14,6 +14,12 @@ const sourceNames: Record<keyof Sources, string> = {
   youtube: 'YouTube',
 }
 
+const sourceUrls: Record<keyof Sources, (id: string) => string> = {
+  appleMusic: id => `https://music.apple.com/gb/song/${id}`,
+  spotify: id => `https://open.spotify.com/track/${id}`,
+  youtube: id => `https://www.youtube.com/watch?v=${id}`,
+}
+
 export const Sources: ComponentType<Props> = ({ sources }) => (
   <ul>
     {Object.entries(sources)
@@ -32,8 +38,8 @@ function sourceUrl({
   sourceName,
   sourceValue,
 }: { sourceName: string; sourceValue: string }): `https://${string}` {
-  if (sourceName === 'appleMusic') {
-    return `https://music.apple.com/gb/song/${sourceValue}`
+  if (sourceName in sourceUrls) {
+    return sourceUrls[sourceName](sourceValue)
   }
   return 'https://'
 }
