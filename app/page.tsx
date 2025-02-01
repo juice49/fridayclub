@@ -1,8 +1,9 @@
 'use cache'
 
 import { PortableText } from '@portabletext/react'
+import { Image } from '@unpic/react/nextjs'
 import Link from 'next/link'
-import { type ComponentType, Fragment } from 'react'
+import type { ComponentType } from 'react'
 import { firstValueFrom } from 'rxjs'
 import { Sources } from '../components/sources'
 import { LEGACY_ARTICLE_DATE, LOCALE, TIMEZONE } from '../constants'
@@ -45,6 +46,15 @@ const LIST_ARTICLES_QUERY = `
                     "appleMusic": sources.appleMusic,
                     "spotify": sources.spotify,
                     "youtube": sources.youtube
+                  },
+                  releaseGroup->{
+                    name,
+                    coverArt {
+                      asset->{
+                        url,
+                        "aspectRatio": metadata.dimensions.aspectRatio
+                      }
+                    }
                   }
                 }
               )
@@ -88,15 +98,29 @@ const components = {
       <div>
         <div style={{ padding: '2rem', outline: '1px dashed currentColor' }}>
           {value.subject.map(subject => (
-            <Fragment key={subject._id}>
-              <p>
-                <strong style={{ textTransform: 'uppercase' }}>
-                  {subject.title}
-                </strong>{' '}
-                by {listFormatter.format(subject.artistsNames)}
-              </p>
-              <Sources sources={subject.sources} />
-            </Fragment>
+            <article
+              key={subject._id}
+              style={{
+                display: 'flex',
+                gap: '1rem',
+              }}
+            >
+              <Image
+                src={subject.releaseGroup.coverArt.asset.url}
+                width={80}
+                alt={`Cover art for "${subject.releaseGroup.name}"`}
+                aspectRatio={subject.releaseGroup.coverArt.asset.aspectRatio}
+              />
+              <div>
+                <h3>
+                  <strong style={{ textTransform: 'uppercase' }}>
+                    {subject.title}
+                  </strong>{' '}
+                  by {listFormatter.format(subject.artistsNames)}
+                </h3>
+                <Sources sources={subject.sources} />
+              </div>
+            </article>
           ))}
         </div>
         {/* @ts-ignore */}
