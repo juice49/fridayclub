@@ -87,7 +87,7 @@ const LIST_ARTICLES_QUERY = `
           })
         }
       }
-    }
+    } | order(publishedAt desc)
 `
 
 const listFormatter = new Intl.ListFormat()
