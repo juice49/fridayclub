@@ -4,17 +4,6 @@ import type { ComponentType } from 'react'
 import { firstValueFrom } from 'rxjs'
 import { sanityClient } from '../../../sanity-client'
 
-const TRACK_QUERY = `
-  *[_type == "track" && slug.current == $slug] {
-    title,
-    "artists": artists[]->{
-      name,
-      slug
-    },
-    sources
-  }[0]
-`
-
 const listFormat = new Intl.ListFormat('en')
 
 interface Props {
@@ -25,12 +14,7 @@ interface Props {
 
 const Page: ComponentType<Props> = async ({ params }) => {
   const { slug } = await params
-
-  const track = await firstValueFrom(
-    sanityClient.fetch(TRACK_QUERY, {
-      slug,
-    }),
-  )
+  const track = await getTrack(slug)
 
   if (track === null) {
     return notFound()
@@ -76,3 +60,22 @@ const Page: ComponentType<Props> = async ({ params }) => {
 }
 
 export default Page
+
+const TRACK_QUERY = `
+  *[_type == "track" && slug.current == $slug] {
+    title,
+    "artists": artists[]->{
+      name,
+      slug
+    },
+    sources
+  }[0]
+`
+
+async function getTrack(slug: string) {
+  return await firstValueFrom(
+    sanityClient.fetch(TRACK_QUERY, {
+      slug,
+    }),
+  )
+}

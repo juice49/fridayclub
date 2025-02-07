@@ -3,12 +3,6 @@ import type { ComponentType } from 'react'
 import { firstValueFrom } from 'rxjs'
 import { sanityClient } from '../../../sanity-client'
 
-const ARTIST_QUERY = `
-  *[_type == "artist" && slug.current == $slug] {
-    name
-  }[0]
-`
-
 interface Props {
   params: Promise<{
     slug: string
@@ -17,12 +11,7 @@ interface Props {
 
 const Page: ComponentType<Props> = async ({ params }) => {
   const { slug } = await params
-
-  const artist = await firstValueFrom(
-    sanityClient.fetch(ARTIST_QUERY, {
-      slug,
-    }),
-  )
+  const artist = await getArtist(slug)
 
   if (artist === null) {
     return notFound()
@@ -36,3 +25,18 @@ const Page: ComponentType<Props> = async ({ params }) => {
 }
 
 export default Page
+
+const ARTIST_QUERY = `
+  *[_type == "artist" && slug.current == $slug] {
+    name
+  }[0]
+`
+
+async function getArtist(slug: string) {
+  'use cache'
+  return await firstValueFrom(
+    sanityClient.fetch(ARTIST_QUERY, {
+      slug,
+    }),
+  )
+}
