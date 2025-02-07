@@ -105,12 +105,14 @@ const components = {
                 gap: '1rem',
               }}
             >
-              <Image
-                src={subject.releaseGroup.coverArt.asset.url}
-                width={80}
-                alt={`Cover art for "${subject.releaseGroup.name}"`}
-                aspectRatio={subject.releaseGroup.coverArt.asset.aspectRatio}
-              />
+              {subject.releaseGroup?.coverArt && (
+                <Image
+                  src={subject.releaseGroup.coverArt.asset.url}
+                  width={80}
+                  alt={`Cover art for "${subject.releaseGroup.name}"`}
+                  aspectRatio={subject.releaseGroup.coverArt.asset.aspectRatio}
+                />
+              )}
               <div>
                 <h3>
                   <strong style={{ textTransform: 'uppercase' }}>
