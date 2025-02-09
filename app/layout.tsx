@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/next'
 import localFont from 'next/font/local'
 import '../mist.css'
 
@@ -31,6 +32,7 @@ export default function RootLayout({
             <a href='https://github.com/juice49/fridayclub'>View source</a>
           </p>
         </footer>
+        <Analytics />
       </body>
     </html>
   )
