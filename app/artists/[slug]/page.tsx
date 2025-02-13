@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import type { ComponentType } from 'react'
 import { firstValueFrom } from 'rxjs'
@@ -7,6 +8,15 @@ interface Props {
   params: Promise<{
     slug: string
   }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  const artist = await getArtist(slug)
+
+  return {
+    title: artist.name,
+  }
 }
 
 const Page: ComponentType<Props> = async ({ params }) => {

@@ -1,12 +1,27 @@
 import { Analytics } from '@vercel/analytics/next'
 import localFont from 'next/font/local'
 import '../mist.css'
+import type { Metadata } from 'next'
 
 const myFont = localFont({
   src: '../fonts/MonaspaceNeonVarVF[wght,wdth,slnt].woff2',
   display: 'swap',
   variable: '--font-monaspace',
 })
+
+export const metadata: Metadata = {
+  title: {
+    template: '%s - fridayclub',
+    default: 'fridayclub is a music blog',
+  },
+  description: 'fridayclub is a music blog.',
+  authors: [
+    {
+      name: 'Ash',
+      url: 'https://ash.gd',
+    },
+  ],
+}
 
 export default function RootLayout({
   children,

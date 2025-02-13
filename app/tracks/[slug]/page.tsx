@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { ComponentType } from 'react'
@@ -10,6 +11,15 @@ interface Props {
   params: Promise<{
     slug: string
   }>
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params
+  const track = await getTrack(slug)
+
+  return {
+    title: `${track.title} by ${listFormat.format(track.artists.map(({ name }) => name))}`,
+  }
 }
 
 const Page: ComponentType<Props> = async ({ params }) => {
