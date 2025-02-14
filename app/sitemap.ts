@@ -24,7 +24,7 @@ const SITEMAP_QUERY = `
   ]
 `
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+export default function sitemap(): Promise<MetadataRoute.Sitemap> {
   return firstValueFrom(
     sanityClient.fetch(SITEMAP_QUERY, {
       baseUrl: BASE_URL,
