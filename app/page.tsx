@@ -10,7 +10,7 @@ import { LEGACY_ARTICLE_DATE, LOCALE, TIMEZONE } from '../constants'
 import { LIST_ARTICLES_QUERY } from '../queries/articles'
 import { sanityClient } from '../sanity-client'
 
-const listFormatter = new Intl.ListFormat()
+const listFormatter = new Intl.ListFormat('en')
 
 const components = {
   types: {
