@@ -16,65 +16,80 @@ export const INTERNAL_LINK_FRAGMENT = `
   }
 `
 
-export const LIST_ARTICLES_QUERY = `
-  *[_type == "article" && column == "weeklyRoundup"] {
-      _id,
-      title,
-      column,
-      publishedAt,
-      "body": body[] {
-        ...,
-        ...select(
-          _type == 'item' => {
-            "subject": subject[]->{
-              ...,
-              ...select(
-                _type == "track" => {
-                  "artistsNames": artists[]->name,
-                  "sources": {
-                    "appleMusic": sources.appleMusic,
-                    "spotify": sources.spotify,
-                    "youtube": sources.youtube
-                  },
-                  releaseGroup->{
-                    name,
-                    coverArt {
-                      asset->{
-                        url,
-                        "aspectRatio": metadata.dimensions.aspectRatio
-                      }
-                    }
+export const ARTICLE_FRAGMENT = `
+  _id,
+  title,
+  column,
+  publishedAt,
+  "body": body[] {
+    ...,
+    ...select(
+      _type == 'item' => {
+        "subject": subject[]->{
+          ...,
+          ...select(
+            _type == "track" => {
+              "artistsNames": artists[]->name,
+              "sources": {
+                "appleMusic": sources.appleMusic,
+                "spotify": sources.spotify,
+                "youtube": sources.youtube
+              },
+              releaseGroup->{
+                name,
+                coverArt {
+                  asset->{
+                    url,
+                    "aspectRatio": metadata.dimensions.aspectRatio
                   }
                 }
-              )
-            },
-            body[] {
-              ...,
-              markDefs[] {
-                ...,
-                ...select({
-                  ${INTERNAL_LINK_FRAGMENT}
-                })
               }
             }
-          }
-        ),
-        ...select(_type == 'lyrics' => {
-          "lyrics": lyrics,
-          "trackTitle": track->title,
-          "trackArtistsNames": track->artists[]->name,
-          "sources": {
-            "appleMusic": track->sources.appleMusic,
-            "spotify": track->sources.spotify,
-            "youtube": track->sources.youtube
-          }
-        }),
-        markDefs[] {
+          )
+        },
+        body[] {
           ...,
-          ...select({
-            ${INTERNAL_LINK_FRAGMENT}
-          })
+          markDefs[] {
+            ...,
+            ...select({
+              ${INTERNAL_LINK_FRAGMENT}
+            })
+          }
         }
       }
-    } | order(publishedAt desc)
+    ),
+    ...select(_type == 'lyrics' => {
+      "lyrics": lyrics,
+      "trackTitle": track->title,
+      "trackArtistsNames": track->artists[]->name,
+      "sources": {
+        "appleMusic": track->sources.appleMusic,
+        "spotify": track->sources.spotify,
+        "youtube": track->sources.youtube
+      }
+    }),
+    markDefs[] {
+      ...,
+      ...select({
+        ${INTERNAL_LINK_FRAGMENT}
+      })
+    }
+  }
+`
+
+export const LIST_ARTICLES_QUERY = `
+  *[_type == "article" && column == "weeklyRoundup"] {
+    ${ARTICLE_FRAGMENT}
+  } | order(publishedAt desc)
+`
+
+export const ARTICLE_QUERY = `
+  *[
+    _type == "article" &&
+    column == "weeklyRoundup" &&
+    slug.current == $slug &&
+    string::startsWith(publishedAt, array::join([$year, $month], "-"))
+  ] {
+    ${ARTICLE_FRAGMENT}
+  }[0]
 `
