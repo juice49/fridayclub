@@ -1,4 +1,4 @@
-export const INTERNAL_LINK_FRAGMENT = `
+export const INTERNAL_LINK_PROJECTION_FRAGMENT = `
   _type == "internalLink" => {
     "path": "/" + array::join(
       array::compact(
@@ -16,7 +16,7 @@ export const INTERNAL_LINK_FRAGMENT = `
   }
 `
 
-export const ARTICLE_FRAGMENT = `
+export const ARTICLE_PROJECTION_FRAGMENT = `
   _id,
   title,
   column,
@@ -52,7 +52,7 @@ export const ARTICLE_FRAGMENT = `
           markDefs[] {
             ...,
             ...select({
-              ${INTERNAL_LINK_FRAGMENT}
+              ${INTERNAL_LINK_PROJECTION_FRAGMENT}
             })
           }
         }
@@ -71,7 +71,7 @@ export const ARTICLE_FRAGMENT = `
     markDefs[] {
       ...,
       ...select({
-        ${INTERNAL_LINK_FRAGMENT}
+        ${INTERNAL_LINK_PROJECTION_FRAGMENT}
       })
     }
   }
@@ -79,7 +79,7 @@ export const ARTICLE_FRAGMENT = `
 
 export const LIST_ARTICLES_QUERY = `
   *[_type == "article" && column == "weeklyRoundup"] {
-    ${ARTICLE_FRAGMENT}
+    ${ARTICLE_PROJECTION_FRAGMENT}
   } | order(publishedAt desc)
 `
 
@@ -90,6 +90,6 @@ export const ARTICLE_QUERY = `
     slug.current == $slug &&
     string::startsWith(publishedAt, array::join([$year, $month], "-"))
   ] {
-    ${ARTICLE_FRAGMENT}
+    ${ARTICLE_PROJECTION_FRAGMENT}
   }[0]
 `
