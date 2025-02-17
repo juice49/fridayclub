@@ -2,6 +2,7 @@ import { Analytics } from '@vercel/analytics/next'
 import localFont from 'next/font/local'
 import '../mist.css'
 import type { Metadata } from 'next'
+import Link from 'next/link'
 
 const myFont = localFont({
   src: '../fonts/MonaspaceNeonVarVF[wght,wdth,slnt].woff2',
@@ -31,7 +32,10 @@ export default function RootLayout({
   return (
     <html lang='en' className={myFont.variable}>
       <body>
-        <p>fridayclub is a music blog. fridayclub is under construction 🚧.</p>
+        <p>
+          <Link href='/'>fridayclub</Link> is a music blog. fridayclub is under
+          construction 🚧.
+        </p>
         {children}
         <footer>
           <p>***</p>
