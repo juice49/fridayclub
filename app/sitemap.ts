@@ -1,8 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { firstValueFrom } from 'rxjs'
+import { BASE_URL } from '../constants'
 import { sanityClient } from '../sanity-client'
-
-const BASE_URL = 'https://fridayclub.co'
 
 const SITEMAP_QUERY = `
   [
