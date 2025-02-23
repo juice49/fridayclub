@@ -1,0 +1,17 @@
+{
+  "pre-commit": {
+    "parallel": true,
+    "jobs": [
+      {
+        "run": "pnpm biome format --write {staged_files}",
+        "glob": ["*.ts", "*.tsx"],
+        "stage_fixed": true
+      },
+      {
+        "run": "pnpm biome lint --write {staged_files}",
+        "glob": ["*.ts", "*.tsx"],
+        "stage_fixed": true
+      }
+    ]
+  }
+}
