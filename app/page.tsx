@@ -6,7 +6,11 @@ import { LIST_ARTICLES_QUERY } from '../queries/articles'
 import { sanityClient } from '../sanity-client'
 
 const Page: ComponentType = async () => {
-  const articles = await firstValueFrom(sanityClient.fetch(LIST_ARTICLES_QUERY))
+  const articles = await firstValueFrom(
+    sanityClient.fetch(LIST_ARTICLES_QUERY, {
+      baseUrl: null,
+    }),
+  )
 
   return (
     <>

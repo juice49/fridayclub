@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { firstValueFrom } from 'rxjs'
 import { BASE_URL } from '../constants'
+import { ARTICLE_URL_PROJECTION_FRAGMENT } from '../queries/articles'
 import { sanityClient } from '../sanity-client'
 
 const SITEMAP_QUERY = `
@@ -13,14 +14,7 @@ const SITEMAP_QUERY = `
     },
     ...*[_type in ["article", "artist", "track", "releaseGroup"]] {
       "url": select(
-        _type == "article" => array::join(
-          [
-            $baseUrl,
-            array::join(string::split(publishedAt, "-")[0...2], "/"),
-            slug.current
-          ],
-          "/"
-        ),
+        _type == "article" => ${ARTICLE_URL_PROJECTION_FRAGMENT},
         _type == "artist" => array::join([$baseUrl, "artists", slug.current], "/"),
         _type == "track" => array::join([$baseUrl, "tracks", slug.current], "/"),
         _type == "releaseGroup" => array::join([$baseUrl, "release-groups", slug.current], "/"),

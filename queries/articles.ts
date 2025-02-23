@@ -1,3 +1,14 @@
+export const ARTICLE_URL_PROJECTION_FRAGMENT = `
+  array::join(
+    [
+      coalesce($baseUrl, ""),
+      array::join(string::split(publishedAt, "-")[0...2], "/"),
+      slug.current
+    ],
+    "/"
+  )
+`
+
 export const INTERNAL_LINK_PROJECTION_FRAGMENT = `
   _type == "internalLink" => {
     "path": "/" + array::join(
@@ -21,6 +32,7 @@ export const ARTICLE_PROJECTION_FRAGMENT = `
   title,
   column,
   publishedAt,
+  "url": ${ARTICLE_URL_PROJECTION_FRAGMENT},
   "body": body[] {
     ...,
     ...select(

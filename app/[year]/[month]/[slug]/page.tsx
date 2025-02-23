@@ -46,5 +46,10 @@ interface ArticleParams {
 
 async function getArticle(params: ArticleParams) {
   'use cache'
-  return await firstValueFrom(sanityClient.fetch(ARTICLE_QUERY, params))
+  return await firstValueFrom(
+    sanityClient.fetch(ARTICLE_QUERY, {
+      ...params,
+      baseUrl: null,
+    }),
+  )
 }

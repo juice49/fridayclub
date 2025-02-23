@@ -94,7 +94,9 @@ interface Props {
 
 export const Article: ComponentType<Props> = ({ article }) => (
   <article style={{ maxWidth: '60ch', marginInline: 'auto' }}>
-    <h2>{article.title}</h2>
+    <h2>
+      <a href={article.url}>{article.title}</a>
+    </h2>
     <time dateTime={article.publishedAt}>
       {formatDate(article.publishedAt)}{' '}
       {isDay(article.publishedAt, 'Friday') ? '(friday!)' : '(not a friday)'}
